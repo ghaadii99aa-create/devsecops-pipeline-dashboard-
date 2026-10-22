@@ -4,246 +4,435 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+        content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="dark">
   <link rel="icon" href="data:,">
-  <title>Vulnerability Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>Security Posture Dashboard</title>
   <style>
     :root {
-      --bg: #f5f7fb;
-      --surface: #ffffff;
-      --surface-2: #eef1f7;
-      --border: #dde2ec;
-      --text: #1a2233;
-      --muted: #5d6a82;
-      --accent: #2f6bff;
-      --critical: #c81e3a;
-      --high: #e8590c;
-      --medium: #c99400;
-      --low: #2b7bd6;
-      --ok: #1f9d55;
-      --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 4px 12px rgba(16, 24, 40, .05);
-      color-scheme: light;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        --bg: #0d1220;
-        --surface: #151c2e;
-        --surface-2: #1c2539;
-        --border: #2a3550;
-        --text: #e6ebf5;
-        --muted: #93a0ba;
-        --accent: #6c9bff;
-        --critical: #ff5470;
-        --high: #ff8a3d;
-        --medium: #f2c037;
-        --low: #5aa9ff;
-        --ok: #3ccf7e;
-        --shadow: none;
-        color-scheme: dark;
-      }
-    }
-    :root[data-theme="dark"] {
-      --bg: #0d1220;
-      --surface: #151c2e;
-      --surface-2: #1c2539;
-      --border: #2a3550;
-      --text: #e6ebf5;
-      --muted: #93a0ba;
-      --accent: #6c9bff;
-      --critical: #ff5470;
+      --bg: #0b0f17;
+      --bg-elev: #0f1520;
+      --glass: rgba(255, 255, 255, 0.035);
+      --glass-strong: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-border-strong: rgba(255, 255, 255, 0.14);
+      --text: #e7ecf4;
+      --text-2: #a3aec2;
+      --text-3: #6b778c;
+      --accent: #7c5cff;
+      --accent-2: #3ea8ff;
+      --critical: #ff4d6d;
       --high: #ff8a3d;
-      --medium: #f2c037;
-      --low: #5aa9ff;
-      --ok: #3ccf7e;
-      --shadow: none;
+      --medium: #f5c542;
+      --low: #4da3ff;
+      --ok: #2ed398;
+      --muted: #8391a7;
+      --radius: 14px;
+      --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       color-scheme: dark;
     }
 
     * { box-sizing: border-box; }
+    html, body { margin: 0; }
     body {
-      margin: 0;
-      background: var(--bg);
+      min-height: 100vh;
+      background:
+        radial-gradient(1100px 600px at 85% -10%, rgba(124, 92, 255, 0.14), transparent 60%),
+        radial-gradient(900px 500px at -10% 10%, rgba(62, 168, 255, 0.10), transparent 60%),
+        var(--bg);
+      background-attachment: fixed;
       color: var(--text);
-      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font: 14px/1.5 var(--font);
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: "cv11", "ss01";
     }
-    a { color: var(--accent); }
-    code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em; }
-    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+    a { color: var(--accent-2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .mono { font-family: var(--mono); font-size: 12.5px; }
+    button { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 
-    header.top {
-      display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: space-between;
-      margin-bottom: 20px;
+    /* ---------- Shell ---------- */
+    .shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar {
+      position: sticky; top: 0; height: 100vh; padding: 20px 14px;
+      border-right: 1px solid var(--glass-border);
+      background: rgba(11, 15, 23, 0.6);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      display: flex; flex-direction: column; gap: 24px;
     }
-    h1 { font-size: 1.5rem; margin: 0 0 4px; letter-spacing: -.01em; }
-    .subtitle { color: var(--muted); margin: 0; }
-    .meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; color: var(--muted); font-size: .85rem; }
-    .meta span strong { color: var(--text); font-weight: 600; }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px; }
+    .brand-mark {
+      width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 6px 20px rgba(124, 92, 255, 0.35);
+    }
+    .brand-mark svg { width: 17px; height: 17px; }
+    .brand-name { font-weight: 700; letter-spacing: -0.01em; }
+    .brand-sub { font-size: 11px; color: var(--text-3); }
+    .nav { display: flex; flex-direction: column; gap: 2px; }
+    .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); padding: 0 10px 6px; }
+    .nav a {
+      display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px;
+      color: var(--text-2); font-weight: 500; text-decoration: none;
+    }
+    .nav a:hover { background: var(--glass); color: var(--text); }
+    .nav a.active { background: var(--glass-strong); color: var(--text); box-shadow: inset 2px 0 0 var(--accent); }
+    .nav svg { width: 16px; height: 16px; opacity: 0.85; flex: none; }
+    .sidebar-foot { margin-top: auto; padding: 12px; border-radius: 10px; background: var(--glass); border: 1px solid var(--glass-border); font-size: 12px; color: var(--text-2); }
+    .sidebar-foot strong { display: block; color: var(--text); font-size: 12.5px; margin-bottom: 2px; }
 
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-    button, .btn {
-      font: inherit; font-size: .88rem; cursor: pointer;
-      border: 1px solid var(--border); background: var(--surface); color: var(--text);
-      padding: 7px 12px; border-radius: 8px;
+    .main { min-width: 0; padding: 0 28px 40px; }
+
+    /* ---------- Top bar ---------- */
+    .topbar {
+      position: sticky; top: 0; z-index: 5; margin: 0 -28px 24px; padding: 14px 28px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      background: rgba(11, 15, 23, 0.72);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--glass-border);
     }
-    button:hover, .btn:hover { border-color: var(--accent); }
-    button:focus-visible, .btn:focus-within, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .crumbs { color: var(--text-3); font-size: 13px; }
+    .crumbs b { color: var(--text); font-weight: 600; }
+    .topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+      padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      border: 1px solid var(--glass-border-strong); background: var(--glass); color: var(--text);
+      transition: background .15s, border-color .15s;
+    }
+    .btn:hover { background: var(--glass-strong); border-color: rgba(255,255,255,0.22); }
+    .btn.primary { background: linear-gradient(135deg, var(--accent), #5b7cff); border-color: transparent; }
+    .btn.primary:hover { filter: brightness(1.08); }
+    .btn svg { width: 14px; height: 14px; }
     .btn input { display: none; }
 
-    .pill {
-      display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: .8rem;
-      padding: 4px 10px; border-radius: 999px; border: 1px solid currentColor;
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 4px; }
+    .page-sub { margin: 0; color: var(--text-2); }
+    .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px;
+      font-size: 12px; color: var(--text-2); background: var(--glass); border: 1px solid var(--glass-border);
     }
-    .pill.passed { color: var(--ok); }
-    .pill.failed { color: var(--critical); }
-    .pill.unknown { color: var(--muted); }
+    .chip b { color: var(--text); font-weight: 500; }
+
+    /* ---------- Status badges ---------- */
+    .status {
+      display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
+      color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--c) 28%, transparent);
+    }
+    .status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 22%, transparent); }
+    .status.ok { --c: var(--ok); }
+    .status.fail { --c: var(--critical); }
+    .status.warn { --c: var(--medium); }
+    .status.idle { --c: var(--muted); }
 
     .notice {
-      display: none; margin-bottom: 16px; padding: 10px 14px; border-radius: 8px;
-      background: var(--surface-2); border: 1px dashed var(--border); color: var(--muted); font-size: .88rem;
+      display: none; margin-bottom: 18px; padding: 10px 14px; border-radius: 10px; font-size: 13px; color: var(--text-2);
+      background: rgba(62, 168, 255, 0.07); border: 1px solid rgba(62, 168, 255, 0.22);
     }
-    .notice.show { display: block; }
+    .notice.show { display: flex; gap: 8px; align-items: center; }
 
-    .dropzone.dragging { outline: 3px dashed var(--accent); outline-offset: 6px; border-radius: 12px; }
-
-    /* Severity cards */
-    .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+    /* ---------- Glass cards ---------- */
     .card {
-      position: relative; text-align: left; background: var(--surface); border: 1px solid var(--border);
-      border-radius: 12px; padding: 16px 16px 14px; box-shadow: var(--shadow); overflow: hidden;
-      transition: transform .12s ease, border-color .12s ease;
+      position: relative; border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 32px rgba(0,0,0,0.25);
     }
-    .card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--sev); }
-    .card:hover { transform: translateY(-2px); }
-    .card[aria-pressed="true"] { border-color: var(--sev); box-shadow: 0 0 0 1px var(--sev) inset; }
-    .card .label { display: flex; justify-content: space-between; color: var(--muted); font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
-    .card .count { font-size: 2.2rem; font-weight: 700; line-height: 1.1; margin: 6px 0 8px; color: var(--sev); font-variant-numeric: tabular-nums; }
-    .card .bar { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
-    .card .bar i { display: block; height: 100%; width: 0; background: var(--sev); transition: width .4s ease; }
-    .card .hint { margin-top: 8px; font-size: .78rem; color: var(--muted); }
-    .sev-critical { --sev: var(--critical); }
-    .sev-high { --sev: var(--high); }
-    .sev-medium { --sev: var(--medium); }
-    .sev-low { --sev: var(--low); }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px 0; }
+    .card-title { font-size: 13px; font-weight: 600; color: var(--text); margin: 0; }
+    .card-hint { font-size: 12px; color: var(--text-3); }
+    .card-body { padding: 16px 18px 18px; }
 
-    /* Panels */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
-    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
-    .panel h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; }
-    .score { font-size: 2.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .score small { font-size: .9rem; color: var(--muted); font-weight: 500; }
-    .breakdown { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-    .breakdown li { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: .88rem; }
-    .breakdown .track { grid-column: 1 / -1; height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
-    .breakdown .track i { display: block; height: 100%; background: var(--accent); }
-    .empty-small { color: var(--muted); font-size: .88rem; }
-
-    /* Findings table */
-    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
-    .toolbar input[type="search"], .toolbar select {
-      font: inherit; font-size: .88rem; padding: 7px 10px; border-radius: 8px;
-      border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    /* KPIs */
+    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .kpi { padding: 18px; overflow: hidden; }
+    .kpi::after {
+      content: ""; position: absolute; inset: 0 0 auto 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--kc, var(--accent)), transparent); opacity: 0.6;
     }
-    .toolbar input[type="search"] { flex: 1 1 240px; min-width: 0; }
-    .toolbar .count-label { color: var(--muted); font-size: .85rem; margin-left: auto; }
+    .kpi-top { display: flex; align-items: center; justify-content: space-between; }
+    .kpi-label { font-size: 12.5px; color: var(--text-2); font-weight: 500; }
+    .kpi-icon {
+      width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
+      color: var(--kc, var(--accent)); background: color-mix(in srgb, var(--kc, var(--accent)) 14%, transparent);
+    }
+    .kpi-icon svg { width: 16px; height: 16px; }
+    .kpi-value { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; margin: 10px 0 6px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+    .kpi-value.text { font-size: 22px; margin: 14px 0 8px; }
+    .kpi-foot { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    /* Overview row */
+    .row { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+    .dist-bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: rgba(255,255,255,0.05); gap: 2px; }
+    .dist-bar span { display: block; height: 100%; transition: width .5s ease; }
+    .legend { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+    .legend button {
+      text-align: left; cursor: pointer; padding: 10px 12px; border-radius: 10px;
+      background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); transition: border-color .15s, background .15s;
+    }
+    .legend button:hover { background: var(--glass); }
+    .legend button[aria-pressed="true"] { border-color: var(--sc); background: color-mix(in srgb, var(--sc) 8%, transparent); }
+    .legend .l-name { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-2); }
+    .legend .l-name i { width: 8px; height: 8px; border-radius: 2px; background: var(--sc); }
+    .legend .l-count { font-size: 20px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .legend .l-pct { font-size: 11.5px; color: var(--text-3); }
+
+    .breakdown { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+    .breakdown li { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; font-size: 13px; }
+    .breakdown .b-name { color: var(--text-2); }
+    .breakdown .b-num { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .breakdown .track { grid-column: 1 / -1; height: 6px; border-radius: 99px; background: rgba(255,255,255,0.05); overflow: hidden; }
+    .breakdown .track i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+    .empty-small { color: var(--text-3); font-size: 13px; }
+
+    /* Table */
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--glass-border); }
+    .search { position: relative; flex: 1 1 260px; min-width: 0; }
+    .search svg { position: absolute; left: 10px; top: 50%; width: 14px; height: 14px; transform: translateY(-50%); color: var(--text-3); }
+    .search input, .toolbar select {
+      width: 100%; font: inherit; font-size: 13px; color: var(--text);
+      padding: 8px 10px; border-radius: 8px; border: 1px solid var(--glass-border-strong); background: rgba(0,0,0,0.25);
+    }
+    .search input { padding-left: 32px; }
+    .toolbar select { width: auto; }
+    .toolbar .count { margin-left: auto; color: var(--text-3); font-size: 12.5px; }
     .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
-    th { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; white-space: nowrap; }
-    tbody tr:hover { background: var(--surface-2); }
-    .badge {
-      display: inline-block; min-width: 72px; text-align: center; padding: 2px 8px; border-radius: 6px;
-      font-size: .72rem; font-weight: 700; letter-spacing: .04em; color: #fff; background: var(--sev);
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      position: sticky; top: 0; text-align: left; font-weight: 500; font-size: 11.5px; letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--text-3); padding: 10px 18px; border-bottom: 1px solid var(--glass-border); white-space: nowrap; background: rgba(11,15,23,0.4);
     }
-    :root[data-theme="dark"] .badge { color: #0d1220; }
-    @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge { color: #0d1220; } }
-    .tag { display: inline-block; padding: 1px 7px; border-radius: 6px; background: var(--surface-2); color: var(--muted); font-size: .75rem; white-space: nowrap; }
-    td details summary { cursor: pointer; font-weight: 500; }
-    td details p { margin: 6px 0 0; color: var(--muted); max-width: 60ch; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .target { overflow-wrap: anywhere; }
-    .fix { color: var(--muted); }
-    .empty { text-align: center; padding: 36px 8px; color: var(--muted); }
-    .empty strong { display: block; color: var(--ok); font-size: 1.05rem; margin-bottom: 4px; }
-
-    footer { margin-top: 24px; color: var(--muted); font-size: .8rem; text-align: center; }
-
-    @media (max-width: 900px) {
-      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .grid-2 { grid-template-columns: 1fr; }
+    tbody td { padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+    tbody tr.f-row { cursor: pointer; transition: background .12s; }
+    tbody tr.f-row:hover { background: rgba(255,255,255,0.03); }
+    tbody tr.f-row[aria-expanded="true"] { background: rgba(124,92,255,0.06); }
+    .sev {
+      display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px 2px 7px; border-radius: 6px; font-size: 11.5px; font-weight: 600;
+      color: var(--sc); background: color-mix(in srgb, var(--sc) 12%, transparent); border: 1px solid color-mix(in srgb, var(--sc) 25%, transparent);
+      white-space: nowrap;
     }
-    @media (max-width: 640px) {
+    .sev::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--sc); }
+    .s-critical { --sc: var(--critical); }
+    .s-high { --sc: var(--high); }
+    .s-medium { --sc: var(--medium); }
+    .s-low { --sc: var(--low); }
+    .f-id { font-family: var(--mono); font-size: 12px; color: var(--text-2); }
+    .f-title { color: var(--text); font-weight: 500; margin-top: 2px; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11.5px; color: var(--text-2); background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); white-space: nowrap; }
+    .asset { overflow-wrap: anywhere; color: var(--text); }
+    .asset small { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
+    .fix { color: var(--text-2); }
+    .fix.has-fix { color: var(--ok); }
+    tr.detail td { padding: 0 18px 16px; background: rgba(124,92,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .detail-box { padding: 12px 14px; border-radius: 10px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); color: var(--text-2); font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .detail-box a { display: inline-block; margin-top: 8px; }
+    .chev { width: 14px; height: 14px; color: var(--text-3); transition: transform .15s; }
+    tr[aria-expanded="true"] .chev { transform: rotate(90deg); }
+    .empty { text-align: center; padding: 48px 16px; color: var(--text-2); }
+    .empty .ok-ring { width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 50%; display: grid; place-items: center; color: var(--ok); background: rgba(46,211,152,0.12); border: 1px solid rgba(46,211,152,0.3); }
+    .empty strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+
+    .dropzone.dragging::after {
+      content: "Drop Bandit / Trivy JSON reports to analyse"; position: fixed; inset: 16px; z-index: 50;
+      display: grid; place-items: center; font-size: 16px; font-weight: 600; color: var(--text);
+      border: 2px dashed var(--accent); border-radius: 18px; background: rgba(11,15,23,0.85);
+    }
+    footer { margin-top: 24px; color: var(--text-3); font-size: 12px; text-align: center; }
+
+    @media (max-width: 1100px) {
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 860px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .main { padding: 0 16px 32px; }
+      .topbar { margin: 0 -16px 20px; padding: 12px 16px; }
+    }
+    @media (max-width: 560px) {
+      .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .kpi-value { font-size: 26px; }
       .hide-sm { display: none; }
-      .card .count { font-size: 1.8rem; }
+      thead th, tbody td { padding-left: 12px; padding-right: 12px; }
+      .toolbar { padding: 12px; }
+      .toolbar select { flex: 1 1 45%; }
+      .toolbar .count { width: 100%; margin-left: 0; }
+      .crumbs { display: none; }
+      .topbar-actions { margin-left: 0; }
     }
   </style>
 </head>
 <body>
-<div class="wrap dropzone" id="dropzone">
-  <header class="top">
-    <div>
-      <h1>🛡️ Vulnerability Dashboard</h1>
-      <p class="subtitle">Automated Cloud-Native DevSecOps Pipeline &middot; Bandit (SAST) + Trivy (SCA, secrets, IaC &amp; container)</p>
-      <div class="meta" id="meta"></div>
+<div class="shell dropzone" id="dropzone">
+  <aside class="sidebar" aria-label="Primary">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">SecureShip</div>
+        <div class="brand-sub">Cloud Security Posture</div>
+      </div>
     </div>
-    <div class="actions">
-      <span class="pill unknown" id="gate-pill">Gate: unknown</span>
-      <label class="btn" title="Load bandit / trivy / scan-results JSON files">
-        📂 Load reports
-        <input type="file" id="file-input" accept=".json,application/json" multiple>
-      </label>
-      <button type="button" id="demo-btn">Demo data</button>
-      <button type="button" id="theme-btn" aria-label="Toggle colour theme">🌓</button>
+    <nav class="nav">
+      <div class="nav-label">Monitor</div>
+      <a href="#overview" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Overview
+      </a>
+      <a href="#findings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+        Vulnerabilities
+      </a>
+      <a href="#coverage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 019 9h-9z"/></svg>
+        Scan Coverage
+      </a>
+    </nav>
+    <div class="sidebar-foot">
+      <strong>Pipeline scanners</strong>
+      Bandit (SAST) · Trivy (SCA, secrets, IaC, container)
     </div>
-  </header>
+  </aside>
 
-  <div class="notice" id="notice" role="status"></div>
+  <main class="main">
+    <header class="topbar">
+      <div class="crumbs">Security / <b>Vulnerability Management</b></div>
+      <div class="topbar-actions">
+        <span class="status idle" id="gate-pill">Gate not evaluated</span>
+        <label class="btn" title="Load bandit / trivy / scan-results JSON files">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          Import reports
+          <input type="file" id="file-input" accept=".json,application/json" multiple>
+        </label>
+        <button type="button" class="btn primary" id="demo-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>
+          Demo data
+        </button>
+      </div>
+    </header>
 
-  <section class="cards" id="cards" aria-label="Findings by severity"></section>
+    <section class="page-head" id="overview">
+      <div>
+        <h1>Security Posture Overview</h1>
+        <p class="page-sub">Automated Cloud-Native DevSecOps Pipeline · findings from the latest pipeline run</p>
+        <div class="meta" id="meta"></div>
+      </div>
+    </section>
 
-  <section class="grid-2">
-    <div class="panel">
-      <h2>Risk score</h2>
-      <div class="score" id="risk-score">0 <small>/ 100</small></div>
-      <p class="empty-small" id="risk-text">Weighted: Critical ×10, High ×5, Medium ×2, Low ×1.</p>
-    </div>
-    <div class="panel">
-      <h2>By scanner</h2>
-      <ul class="breakdown" id="by-scanner"></ul>
-    </div>
-    <div class="panel">
-      <h2>By category</h2>
-      <ul class="breakdown" id="by-category"></ul>
-    </div>
-  </section>
+    <div class="notice" id="notice" role="status"></div>
 
-  <section class="panel">
-    <h2>Findings</h2>
-    <div class="toolbar">
-      <input type="search" id="search" placeholder="Search ID, package, file, title…" aria-label="Search findings">
-      <select id="filter-scanner" aria-label="Filter by scanner"><option value="">All scanners</option></select>
-      <select id="filter-category" aria-label="Filter by category"><option value="">All categories</option></select>
-      <button type="button" id="clear-btn">Clear filters</button>
-      <span class="count-label" id="count-label"></span>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Severity</th>
-            <th>Finding</th>
-            <th class="hide-sm">Category</th>
-            <th>Target</th>
-            <th class="hide-sm">Remediation</th>
-          </tr>
-        </thead>
-        <tbody id="findings"></tbody>
-      </table>
-    </div>
-  </section>
+    <section class="kpis" aria-label="Key metrics">
+      <article class="card kpi" style="--kc: var(--accent-2)">
+        <div class="kpi-top">
+          <span class="kpi-label">Total Scans</span>
+          <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M7 12h10"/></svg></span>
+        </div>
+        <div class="kpi-value" id="kpi-scans">0</div>
+        <div class="kpi-foot" id="kpi-scans-foot">No reports loaded</div>
+      </article>
+      <article class="card kpi" style="--kc: var(--critical)">
+        <div class="kpi-top">
+          <span class="kpi-label">Critical Vulnerabilities</span>
+          <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span>
+        </div>
+        <div class="kpi-value" id="kpi-critical">0</div>
+        <div class="kpi-foot" id="kpi-critical-foot">—</div>
+      </article>
+      <article class="card kpi" style="--kc: var(--medium)">
+        <div class="kpi-top">
+          <span class="kpi-label">Bandit Status</span>
+          <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg></span>
+        </div>
+        <div class="kpi-value text" id="kpi-bandit"><span class="status idle">Not run</span></div>
+        <div class="kpi-foot" id="kpi-bandit-foot">Static analysis (SAST)</div>
+      </article>
+      <article class="card kpi" style="--kc: var(--accent)">
+        <div class="kpi-top">
+          <span class="kpi-label">Trivy Status</span>
+          <span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.7l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.7l7 4a2 2 0 002 0l7-4a2 2 0 001-1.7z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg></span>
+        </div>
+        <div class="kpi-value text" id="kpi-trivy"><span class="status idle">Not run</span></div>
+        <div class="kpi-foot" id="kpi-trivy-foot">Dependencies, secrets, IaC &amp; image</div>
+      </article>
+    </section>
 
-  <footer>
-    Drop <code>bandit-report.json</code>, <code>trivy-*-report.json</code> or <code>scan-results.json</code> anywhere on this page to analyse them locally &mdash; nothing leaves your browser.
-  </footer>
+    <section class="row" id="coverage">
+      <article class="card">
+        <div class="card-head">
+          <h2 class="card-title">Severity Distribution</h2>
+          <span class="card-hint" id="dist-total">0 findings</span>
+        </div>
+        <div class="card-body">
+          <div class="dist-bar" id="dist-bar" role="img" aria-label="Findings by severity"></div>
+          <div class="legend" id="legend"></div>
+        </div>
+      </article>
+      <article class="card">
+        <div class="card-head">
+          <h2 class="card-title">Findings by Category</h2>
+          <span class="card-hint">All scanners</span>
+        </div>
+        <div class="card-body">
+          <ul class="breakdown" id="by-category"></ul>
+        </div>
+      </article>
+    </section>
+
+    <section class="card" id="findings">
+      <div class="card-head">
+        <h2 class="card-title">Vulnerabilities</h2>
+        <span class="card-hint">Click a row for details</span>
+      </div>
+      <div class="toolbar" style="margin-top: 12px; border-top: 1px solid var(--glass-border);">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="search" id="search" placeholder="Search CVE, package, file, rule…" aria-label="Search findings">
+        </div>
+        <select id="filter-severity" aria-label="Filter by severity">
+          <option value="">All severities</option>
+          <option value="CRITICAL">Critical</option>
+          <option value="HIGH">High</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="LOW">Low</option>
+        </select>
+        <select id="filter-scanner" aria-label="Filter by scanner"><option value="">All scanners</option></select>
+        <select id="filter-category" aria-label="Filter by category"><option value="">All categories</option></select>
+        <span class="count" id="count-label"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 1%"></th>
+              <th>Severity</th>
+              <th>Finding</th>
+              <th class="hide-sm">Scanner</th>
+              <th class="hide-sm">Category</th>
+              <th>Asset</th>
+              <th class="hide-sm">Remediation</th>
+            </tr>
+          </thead>
+          <tbody id="findings-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      Drop <span class="mono">bandit-report.json</span>, <span class="mono">trivy-*-report.json</span> or <span class="mono">scan-results.json</span> anywhere on the page to analyse it locally — nothing leaves your browser.
+    </footer>
+  </main>
 </div>
 
 <script>
@@ -251,14 +440,14 @@
   "use strict";
 
   const SEVERITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
-  const WEIGHTS = { CRITICAL: 10, HIGH: 5, MEDIUM: 2, LOW: 1 };
   const RANK = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+  const SEV_VAR = { CRITICAL: "var(--critical)", HIGH: "var(--high)", MEDIUM: "var(--medium)", LOW: "var(--low)" };
   const DEFAULT_REPORT = "reports/scan-results.json";
 
-  const state = { findings: [], metadata: {}, severity: "", scanner: "", category: "", query: "" };
+  const state = { findings: [], metadata: {}, severity: "", scanner: "", category: "", query: "", open: new Set() };
   const $ = (id) => document.getElementById(id);
 
-  // ---------- DOM helper (never uses innerHTML with report data) ----------
+  // ---------- DOM helper (report data is only ever inserted as text) ----------
   function el(tag, attrs = {}, ...children) {
     const node = document.createElement(tag);
     for (const [key, value] of Object.entries(attrs)) {
@@ -287,6 +476,7 @@
     const s = String(v || "").toUpperCase();
     return SEVERITIES.includes(s) ? s : "LOW";
   };
+  const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
   // ---------- Parsers: normalized, Bandit and Trivy JSON ----------
   function parseBandit(report) {
@@ -353,7 +543,8 @@
       return { findings: parseBandit(data), metadata: { sources: [`Bandit (${name})`] } };
     }
     if (data && (data.SchemaVersion || data.ArtifactType)) {
-      return { findings: parseTrivy(data), metadata: { sources: [`Trivy (${name})`] } };
+      const kind = data.ArtifactType === "container_image" ? "image" : "filesystem";
+      return { findings: parseTrivy(data), metadata: { sources: [`Trivy (${kind}) (${name})`] } };
     }
     throw new Error(`${name}: unrecognised report format`);
   }
@@ -363,64 +554,85 @@
     const m = state.metadata;
     const meta = $("meta");
     meta.replaceChildren();
-    const add = (label, value) => value && meta.append(el("span", {}, `${label}: `, el("strong", {}, value)));
-    add("Repository", m.repository);
+    const add = (label, value) => value && meta.append(el("span", { class: "chip" }, `${label} `, el("b", {}, value)));
+    add("Repo", m.repository);
     add("Branch", m.branch);
     add("Commit", m.commit);
     if (m.generated_at) add("Scanned", new Date(m.generated_at).toLocaleString());
-    if (m.sources && m.sources.length) add("Sources", m.sources.join(", "));
     const runUrl = safeUrl(m.run_url);
-    if (runUrl) meta.append(el("a", { href: runUrl, target: "_blank", rel: "noopener noreferrer" }, "View pipeline run ↗"));
+    if (runUrl) meta.append(el("a", { class: "chip", href: runUrl, target: "_blank", rel: "noopener noreferrer" }, "View pipeline run ↗"));
 
     const pill = $("gate-pill");
     const status = m.gate && m.gate.status;
-    pill.className = `pill ${status === "passed" || status === "failed" ? status : "unknown"}`;
-    pill.textContent = status
-      ? `Gate: ${status === "passed" ? "✔ passed" : "✖ failed"} (${m.gate.fail_on})`
-      : "Gate: not evaluated";
+    if (status === "passed" || status === "failed") {
+      pill.className = `status ${status === "passed" ? "ok" : "fail"}`;
+      pill.textContent = `Security gate ${status} · ${title(m.gate.fail_on || "CRITICAL")}`;
+    } else {
+      pill.className = "status idle";
+      pill.textContent = "Gate not evaluated";
+    }
   }
 
-  function renderCards(counts, total) {
-    const cards = $("cards");
-    cards.replaceChildren(...SEVERITIES.map((sev) => {
-      const pct = total ? Math.round((counts[sev] / total) * 100) : 0;
-      return el("button", {
-        type: "button",
-        class: `card sev-${sev.toLowerCase()}`,
-        "aria-pressed": String(state.severity === sev),
-        title: `Show only ${title(sev)} findings`,
-        onclick: () => { state.severity = state.severity === sev ? "" : sev; render(); },
-      },
-        el("div", { class: "label" }, el("span", {}, title(sev)), el("span", {}, `${pct}%`)),
-        el("div", { class: "count" }, counts[sev]),
-        el("div", { class: "bar" }, el("i", { style: `width:${pct}%` })),
-        el("div", { class: "hint" }, state.severity === sev ? "Filtering — click to clear" : "Click to filter"),
-      );
-    }));
+  /** Status of one scanner family: not run, passed, warnings, or failing. */
+  function scannerStatus(prefix) {
+    const ran = (state.metadata.sources || []).some((s) => s.startsWith(prefix));
+    const items = state.findings.filter((f) => f.scanner.startsWith(prefix));
+    if (!ran && !items.length) return { cls: "idle", label: "Not run", items };
+    if (items.some((f) => f.severity === "CRITICAL" || f.severity === "HIGH")) return { cls: "fail", label: "Failing", items };
+    if (items.length) return { cls: "warn", label: "Warnings", items };
+    return { cls: "ok", label: "Passed", items };
   }
 
-  function renderBreakdown(listId, key) {
+  function renderKpis(counts) {
+    const sources = state.metadata.sources || [];
+    $("kpi-scans").textContent = sources.length;
+    $("kpi-scans-foot").textContent = sources.length
+      ? sources.map((s) => s.replace(/\s*\([^()]*\.json\)$/, "")).join(" · ")
+      : "No reports loaded";
+
+    $("kpi-critical").textContent = counts.CRITICAL;
+    $("kpi-critical").style.color = counts.CRITICAL ? "var(--critical)" : "var(--text)";
+    $("kpi-critical-foot").replaceChildren(
+      el("span", { class: counts.HIGH ? "sev s-high" : "tag" }, `${counts.HIGH} high`),
+      el("span", {}, `of ${plural(state.findings.length, "finding")}`),
+    );
+
+    for (const [key, prefix, what] of [["bandit", "Bandit", "SAST"], ["trivy", "Trivy", "SCA · secrets · IaC · image"]]) {
+      const s = scannerStatus(prefix);
+      $(`kpi-${key}`).replaceChildren(el("span", { class: `status ${s.cls}` }, s.label));
+      $(`kpi-${key}-foot`).textContent = s.cls === "idle" ? what : `${plural(s.items.length, "finding")} · ${what}`;
+    }
+  }
+
+  function renderDistribution(counts, total) {
+    $("dist-total").textContent = plural(total, "finding");
+    $("dist-bar").replaceChildren(...(total
+      ? SEVERITIES.filter((s) => counts[s]).map((s) =>
+          el("span", { style: `width:${(counts[s] / total) * 100}%;background:${SEV_VAR[s]}`, title: `${title(s)}: ${counts[s]}` }))
+      : [el("span", { style: "width:100%;background:var(--ok);opacity:.55", title: "No findings" })]));
+    $("legend").replaceChildren(...SEVERITIES.map((s) => el("button", {
+      type: "button",
+      style: `--sc:${SEV_VAR[s]}`,
+      "aria-pressed": String(state.severity === s),
+      title: `Show only ${title(s)} findings`,
+      onclick: () => { state.severity = state.severity === s ? "" : s; $("filter-severity").value = state.severity; render(); },
+    },
+      el("div", { class: "l-name" }, el("i"), title(s)),
+      el("div", { class: "l-count" }, counts[s]),
+      el("div", { class: "l-pct" }, total ? `${Math.round((counts[s] / total) * 100)}% of total` : "—"),
+    )));
+  }
+
+  function renderBreakdown() {
     const tally = {};
-    for (const f of state.findings) tally[f[key]] = (tally[f[key]] || 0) + 1;
+    for (const f of state.findings) tally[f.category] = (tally[f.category] || 0) + 1;
     const entries = Object.entries(tally).sort((a, b) => b[1] - a[1]);
     const max = Math.max(1, ...entries.map((e) => e[1]));
-    const list = $(listId);
-    list.replaceChildren(...(entries.length
+    $("by-category").replaceChildren(...(entries.length
       ? entries.map(([name, n]) => el("li", {},
-          el("span", {}, name), el("strong", {}, n),
+          el("span", { class: "b-name" }, name), el("span", { class: "b-num" }, n),
           el("span", { class: "track" }, el("i", { style: `width:${(n / max) * 100}%` }))))
-      : [el("li", { class: "empty-small" }, "No findings")]));
-  }
-
-  function renderRisk(counts) {
-    const raw = SEVERITIES.reduce((sum, s) => sum + counts[s] * WEIGHTS[s], 0);
-    const score = Math.min(100, raw);
-    const level = counts.CRITICAL ? "Critical" : counts.HIGH ? "High" : counts.MEDIUM ? "Moderate" : counts.LOW ? "Low" : "Clean";
-    const color = { Critical: "var(--critical)", High: "var(--high)", Moderate: "var(--medium)", Low: "var(--low)", Clean: "var(--ok)" }[level];
-    const node = $("risk-score");
-    node.replaceChildren(String(score), " ", el("small", {}, "/ 100"));
-    node.style.color = color;
-    $("risk-text").textContent = `Overall posture: ${level}. Weighted: Critical ×10, High ×5, Medium ×2, Low ×1 (capped at 100).`;
+      : [el("li", { class: "empty-small" }, "No findings in any category")]));
   }
 
   function fillSelect(id, key, current) {
@@ -442,43 +654,67 @@
       .sort((a, b) => RANK[b.severity] - RANK[a.severity] || String(a.id).localeCompare(String(b.id)));
   }
 
+  const chevron = () => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("class", "chev");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M9 6l6 6-6 6");
+    svg.append(path);
+    return svg;
+  };
+
   function renderTable() {
     const rows = filtered();
-    $("count-label").textContent = `${rows.length} of ${state.findings.length} findings`;
-    const body = $("findings");
+    $("count-label").textContent = `${rows.length} of ${plural(state.findings.length, "finding")}`;
+    const body = $("findings-body");
     if (!rows.length) {
-      body.replaceChildren(el("tr", {}, el("td", { colspan: 5, class: "empty" },
+      body.replaceChildren(el("tr", {}, el("td", { colspan: 7, class: "empty" },
         state.findings.length
           ? "No findings match the current filters."
-          : [el("strong", {}, "✔ No security findings"), "Every scanner came back clean for this build."])));
+          : [el("div", { class: "ok-ring" }, "✓"), el("strong", {}, "No security findings"), "Every scanner came back clean for this build."])));
       return;
     }
-    body.replaceChildren(...rows.map((f) => {
-      const ref = safeUrl(f.reference);
-      const idNode = ref ? el("a", { href: ref, target: "_blank", rel: "noopener noreferrer", class: "mono" }, f.id) : el("span", { class: "mono" }, f.id);
-      return el("tr", {},
-        el("td", {}, el("span", { class: `badge sev-${f.severity.toLowerCase()}` }, f.severity)),
-        el("td", {},
-          el("details", {},
-            el("summary", {}, idNode, " — ", f.title || "Untitled finding"),
-            el("p", {}, f.description || "No description provided."),
-          ),
-          el("div", { class: "tag", style: "margin-top:4px" }, f.scanner)),
+    const out = [];
+    rows.forEach((f, i) => {
+      const key = `${f.scanner}|${f.id}|${f.target}|${f.location}|${i}`;
+      const open = state.open.has(key);
+      const toggle = () => { open ? state.open.delete(key) : state.open.add(key); renderTable(); };
+      out.push(el("tr", {
+        class: "f-row", tabindex: "0", "aria-expanded": String(open),
+        onclick: (e) => { if (!e.target.closest("a")) toggle(); },
+        onkeydown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } },
+      },
+        el("td", {}, chevron()),
+        el("td", {}, el("span", { class: `sev s-${f.severity.toLowerCase()}` }, title(f.severity))),
+        el("td", {}, el("div", { class: "f-id" }, f.id || "—"), el("div", { class: "f-title" }, f.title || "Untitled finding")),
+        el("td", { class: "hide-sm" }, el("span", { class: "tag" }, f.scanner)),
         el("td", { class: "hide-sm" }, el("span", { class: "tag" }, f.category)),
-        el("td", { class: "target" }, f.target, f.location ? el("div", { class: "mono fix" }, f.location) : null),
-        el("td", { class: "hide-sm fix" }, f.fix || "—"),
-      );
-    }));
+        el("td", { class: "asset" }, f.target || "—", f.location ? el("small", {}, f.location) : null),
+        el("td", { class: `hide-sm fix${/^Upgrade to/.test(f.fix || "") ? " has-fix" : ""}` }, f.fix || "—"),
+      ));
+      if (open) {
+        const ref = safeUrl(f.reference);
+        out.push(el("tr", { class: "detail" }, el("td", { colspan: 7 },
+          el("div", { class: "detail-box" },
+            f.description || "No description provided.",
+            el("div", { class: "fix", style: "margin-top:8px" }, "Remediation: ", f.fix || "—"),
+            ref ? el("a", { href: ref, target: "_blank", rel: "noopener noreferrer" }, "View advisory ↗") : null))));
+      }
+    });
+    body.replaceChildren(...out);
   }
 
   function render() {
     const counts = Object.fromEntries(SEVERITIES.map((s) => [s, 0]));
     for (const f of state.findings) counts[f.severity] += 1;
     renderMeta();
-    renderCards(counts, state.findings.length);
-    renderRisk(counts);
-    renderBreakdown("by-scanner", "scanner");
-    renderBreakdown("by-category", "category");
+    renderKpis(counts);
+    renderDistribution(counts, state.findings.length);
+    renderBreakdown();
     fillSelect("filter-scanner", "scanner", state.scanner);
     fillSelect("filter-category", "category", state.category);
     state.scanner = $("filter-scanner").value;
@@ -496,6 +732,8 @@
     state.findings = findings;
     state.metadata = metadata || {};
     state.severity = "";
+    state.open.clear();
+    $("filter-severity").value = "";
     setNotice(notice);
     render();
   }
@@ -516,13 +754,12 @@
         errors.push(err.message || String(err));
       }
     }
-    if (!findings.length && errors.length) { setNotice(`Could not load reports — ${errors.join("; ")}`); return; }
+    if (!sources.length && errors.length) { setNotice(`Could not load reports — ${errors.join("; ")}`); return; }
     load(findings, { ...metadata, sources, generated_at: metadata.generated_at || new Date().toISOString() },
-      `Showing ${files.length} local file(s).${errors.length ? " Skipped: " + errors.join("; ") : ""}`);
+      `Showing ${plural(files.length, "local file")}.${errors.length ? " Skipped: " + errors.join("; ") : ""}`);
   }
 
   function loadDemo(reason) {
-    const now = new Date().toISOString();
     const demo = [
       { scanner: "Trivy (image)", category: "Vulnerability", severity: "CRITICAL", id: "CVE-2024-6345", title: "setuptools: remote code execution via download functions in package_index", description: "A vulnerability in the package_index module allows remote code execution via its download functions.", target: "Python", location: "setuptools@65.5.0", fix: "Upgrade to 70.0.0", reference: "https://avd.aquasec.com/nvd/cve-2024-6345" },
       { scanner: "Trivy (filesystem)", category: "Secret", severity: "CRITICAL", id: "aws-access-key-id", title: "AWS Access Key ID", description: "Hard-coded secret detected. The value is redacted in this report.", target: "config/settings.py", location: "line 12", fix: "Revoke and rotate the credential, then load it from a secret manager.", reference: "" },
@@ -538,7 +775,7 @@
       { scanner: "Trivy (image)", category: "Vulnerability", severity: "LOW", id: "CVE-2011-3374", title: "apt: integrity and authenticity bypass", description: "It was found that apt-key in apt does not correctly validate gpg keys with the master keyring.", target: "python:3.11-slim (debian 12.5)", location: "apt@2.6.1", fix: "No fixed version available yet", reference: "https://avd.aquasec.com/nvd/cve-2011-3374" },
     ];
     load(demo, {
-      repository: "example/vulnerable-app", branch: "main", commit: "demo000", generated_at: now,
+      repository: "example/vulnerable-app", branch: "main", commit: "demo000", generated_at: new Date().toISOString(),
       sources: ["Bandit", "Trivy (filesystem)", "Trivy (image)"], gate: { fail_on: "CRITICAL", status: "failed" },
     }, reason || "Showing demo data from an intentionally vulnerable example app.");
   }
@@ -550,33 +787,15 @@
       const parsed = parseReport(await response.json(), DEFAULT_REPORT);
       load(parsed.findings, parsed.metadata, "");
     } catch {
-      loadDemo(`No pipeline report found at ${DEFAULT_REPORT} — showing demo data. Drop your own report files onto the page to analyse them.`);
+      loadDemo(`No pipeline report found at ${DEFAULT_REPORT} — showing demo data. Import your own reports to analyse them.`);
     }
   }
 
-  // ---------- Theme ----------
-  const root = document.documentElement;
-  try {
-    const saved = localStorage.getItem("vd-theme");
-    if (saved === "light" || saved === "dark") root.dataset.theme = saved;
-  } catch { /* storage unavailable */ }
-  $("theme-btn").addEventListener("click", () => {
-    const isDark = root.dataset.theme
-      ? root.dataset.theme === "dark"
-      : matchMedia("(prefers-color-scheme: dark)").matches;
-    root.dataset.theme = isDark ? "light" : "dark";
-    try { localStorage.setItem("vd-theme", root.dataset.theme); } catch { /* ignore */ }
-  });
-
   // ---------- Events ----------
   $("search").addEventListener("input", (e) => { state.query = e.target.value; renderTable(); });
+  $("filter-severity").addEventListener("change", (e) => { state.severity = e.target.value; render(); });
   $("filter-scanner").addEventListener("change", (e) => { state.scanner = e.target.value; renderTable(); });
   $("filter-category").addEventListener("change", (e) => { state.category = e.target.value; renderTable(); });
-  $("clear-btn").addEventListener("click", () => {
-    Object.assign(state, { severity: "", scanner: "", category: "", query: "" });
-    $("search").value = "";
-    render();
-  });
   $("demo-btn").addEventListener("click", () => loadDemo());
   $("file-input").addEventListener("change", (e) => { if (e.target.files.length) loadFiles([...e.target.files]); e.target.value = ""; });
 
@@ -587,6 +806,18 @@
     const files = [...(e.dataTransfer?.files || [])].filter((f) => f.name.endsWith(".json"));
     if (files.length) loadFiles(files);
   });
+
+  // Highlight the sidebar entry for the section in view.
+  const links = [...document.querySelectorAll(".nav a")];
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        links.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === `#${entry.target.id}`));
+      }
+    }, { rootMargin: "-40% 0px -55% 0px" });
+    ["overview", "coverage", "findings"].forEach((id) => io.observe($(id)));
+  }
 
   loadDefault();
 })();
